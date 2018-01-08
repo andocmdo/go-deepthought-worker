@@ -45,31 +45,4 @@ func worker(wnum int, startPort int) {
 	// update server of job completion status
 	// back to while loop
 
-	/*
-		id := 69
-		// This is where we would process our job
-		cmd := exec.Command("bash", "-c", "sleep 10; date")
-		out, err := cmd.Output()
-		if err != nil {
-			log.Printf("error on job %d", id)
-			log.Printf(err.Error())
-		}
-		log.Printf("Job %d output: %s", id, out)
-
-		// And when finished, note the time, check for errors, etc
-
-				job.Ended = time.Now()
-				job.Running = false
-				job.Completed = true
-				job.Result = string(out)
-
-
-			_, err = RepoUpdateJob(job)
-			if err != nil {
-				log.Printf("error on job %d", id)
-				log.Printf(err.Error())
-				return
-			}
-			log.Printf("worker %d finished job %d", w, id)
-	*/
 }
