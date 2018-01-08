@@ -1,34 +1,29 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"runtime"
 	"strconv"
 )
 
-// TODO parameterize these
-const keepFreeCores = 1
-const startPort = 80085
-const masterIP = "192.168.1.32"
-const masterPort = "8080"
-
 func main() {
-	// number of processor cores to keep free, the rest will be used to run jobs
-	cores := 1
+	// get command args
+	numWorkersPtr := flag.Int("workers", 1, "max number of workers to spawn")
+	startPortPtr := flag.Int("port", 80085, "starting port to accept jobs")
+	flag.Parse()
+
+	// number of processor cores on system
 	coresAvailable := runtime.NumCPU()
 	log.Println("Number of processor cores available: " + strconv.FormatInt(int64(coresAvailable), 10))
-	if coresAvailable > keepFreeCores {
-		cores = coresAvailable - keepFreeCores
-	}
-	log.Println("Number of processor cores to use: ", cores)
 
-	for i := 0; i < cores; i++ {
-		go worker(i)
+	for i := 0; i < *numWorkersPtr; i++ {
+		go worker(i, *startPortPtr)
 	}
 }
 
-func worker(w int) {
-	log.Printf("started worker %d", w)
+func worker(wnum int, startPort int) {
+	log.Printf("started worker %d accepting jobs on port %d", wnum, startPort)
 
 	// register worker with gostockd api server
 
