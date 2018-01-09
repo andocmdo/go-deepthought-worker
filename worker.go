@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-	"errors"
 )
 
 // Worker contains state data for workers
@@ -22,11 +22,11 @@ type worker struct {
 	LastUpdate time.Time `json:"lastUpdate"` // updateable
 }
 
-func (this *worker) run(wn int) {
+func (wrkr *worker) run(wn int) {
 	log.Printf("worker thread %d: started", wn)
 
 	// register worker with gostockd api server
-	if err := this.register(); err != nil {
+	if err := wrkr.register(); err != nil {
 		// handle error
 		log.Printf("worker %d: Error registering with master server", wn)
 		log.Printf(err.Error())
@@ -42,8 +42,8 @@ func (this *worker) run(wn int) {
 	for {
 		// update server showing this worker as ready to accept jobs
 		// set this worker as ready to accept jobs
-		this.Ready = true
-		jsonWorker, _ := json.Marshal(this)
+		wrkr.Ready = true
+		jsonWorker, _ := json.Marshal(wrkr)
 		resp, err := http.Post(master.URLworkers, jsonData, bytes.NewBuffer(jsonWorker))
 		//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
 		if err != nil {
@@ -57,11 +57,11 @@ func (this *worker) run(wn int) {
 			return
 		}
 		resp.Body.Close()
-		if err = json.Unmarshal(body, &this); err != nil {
+		if err = json.Unmarshal(body, &wrkr); err != nil {
 			log.Printf(err.Error())
 			return
 		}
-		if this.Valid != true {
+		if wrkr.Valid != true {
 			log.Printf("worker %d: master server returned worker object with false VALID flag when setting READY!", wn)
 			return
 		}
@@ -91,10 +91,10 @@ func (this *worker) run(wn int) {
 	}
 }
 
-func (this *worker) register() error {
-	jsonWorker, _ := json.Marshal(this)
+func (wrkr *worker) register() error {
+	jsonWorker, _ := json.Marshal(wrkr)
 	resp, err := http.Post(master.URLworkers, jsonData, bytes.NewBuffer(jsonWorker))
-	//resp, err := http.PostForm(requestURL, url.Values{"port": {this.Port}})
+	//resp, err := http.PostForm(requestURL, url.Values{"port": {wrkr.Port}})
 	if err != nil {
 		//log.Printf("worker %d: error registering with master server", wn)
 		log.Println(err)
@@ -106,13 +106,13 @@ func (this *worker) register() error {
 		return err
 	}
 	resp.Body.Close()
-	if err = json.Unmarshal(body, &this); err != nil {
+	if err = json.Unmarshal(body, &wrkr); err != nil {
 		log.Printf(err.Error())
 		return err
 	}
-	if this.Valid != true {
+	if wrkr.Valid != true {
 		//log.Printf("worker %d: master server returned worker object with valid flag set false!", wn)
-		return errors.New("master server response was returned as invalid!")
+		return errors.New("master server response was returned as invalid")
 	}
 	//log.Printf("worker %d: Successfully registered with master server", wn)
 	return nil
