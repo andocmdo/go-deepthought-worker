@@ -35,7 +35,7 @@ func main() {
 	// get command args
 	flag.IntVar(&numWorkers, "workers", 1, "max number of workers to spawn")
 	flag.IntVar(&startPort, "port", 80085, "starting port to accept jobs")
-	flag.StringVar(&apiIP, "master", "127.0.0.1", "IP address of the API server (master node)")
+	flag.StringVar(&apiIP, "master", "127.0.0.1:8080", "IP address of the API server (master node)")
 	flag.Parse()
 
 	// number of processor cores on system
@@ -45,19 +45,16 @@ func main() {
 	log.Println("Starting port (for zeromq): " + strconv.FormatInt(int64(startPort), 10))
 
 	for i := 0; i < numWorkers; i++ {
-		log.Printf("before worker %d creation", i)
 		go worker(i, startPort)
-		log.Printf("after worker %d creation", i)
-		go test()
+		time.Sleep(time.Second * 2)
 	}
-}
 
-func test() {
-	log.Println("test")
+	for {
+	} // run forever
 }
 
 func worker(wn int, port int) {
-	log.Printf("started worker %d", wn)
+	log.Printf("worker %d: started", wn)
 	sPort := strconv.Itoa(port)
 	var thisWorker Worker
 	//workerID := -1
@@ -70,7 +67,7 @@ func worker(wn int, port int) {
 	resp, err := http.Post(requestURL, jsonData, bytes.NewBuffer(jsonWorker))
 	//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
 	if err != nil {
-		log.Println("error registering with master server")
+		log.Printf("worker %d: error registering with master server", wn)
 		log.Println(err)
 		return
 	}
@@ -85,10 +82,11 @@ func worker(wn int, port int) {
 		return
 	}
 	if thisWorker.Valid != true {
-		log.Printf("master server returned worker object with valid flag set false!")
+		log.Printf("worker %d: master server returned worker object with valid flag set false!", wn)
 		return
 	}
-	log.Println("Successfully registered with master server")
+	log.Printf("worker %d: Successfully registered with master server", wn)
+	time.Sleep(time.Second * 5)
 
 	// open listening port for jobs
 	// TODO 0mq stuff here
@@ -103,7 +101,7 @@ func worker(wn int, port int) {
 		resp, err := http.Post(requestURL, jsonData, bytes.NewBuffer(jsonWorker))
 		//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
 		if err != nil {
-			log.Println("error setting READY with master server")
+			log.Printf("worker %d: error setting READY with master server", wn)
 			log.Println(err)
 			return
 		}
@@ -118,31 +116,31 @@ func worker(wn int, port int) {
 			return
 		}
 		if thisWorker.Valid != true {
-			log.Printf("master server returned worker object with false VALID flag when setting READY!")
+			log.Printf("worker %d: master server returned worker object with false VALID flag when setting READY!", wn)
 			return
 		}
-		log.Println("Successfully notified master server, READY to accept jobs")
+		log.Printf("worker %d: Successfully notified master server, READY to accept jobs", wn)
 
 		// wait/listen to port for incoming jobs
 		time.Sleep(time.Second * 15)
 
 		// decode incoming job
-		log.Println("recieved job")
+		log.Printf("worker %d: recieved job", wn)
 		time.Sleep(time.Second * 5)
 
 		// start job
-		log.Println("started job")
+		log.Printf("worker %d: started job", wn)
 		time.Sleep(time.Second * 5)
 
 		// update server that we have started job
-		log.Println("updated master for running job")
+		log.Printf("worker %d: updated master for running job", wn)
 		time.Sleep(time.Second * 5)
 
 		// wait for job to finish
-		log.Println("completed job")
+		log.Printf("worker %d: completed job", wn)
 		time.Sleep(time.Second * 5)
 
 		// update server of job completion status
-		log.Println("updated master of successful job completion")
+		log.Printf("worker %d: updated master of successful job completion", wn)
 	}
 }
