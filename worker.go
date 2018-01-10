@@ -25,16 +25,16 @@ type Worker struct {
 }
 
 func (wrkr *Worker) run(wn int, master Server) {
-	log.Printf("thread %d: started", wn)
+	log.Printf("thread %d worker %d : started", wn, wrkr.ID)
 
 	// register worker with gostockd api server
 	if err := wrkr.register(&master); err != nil {
 		// handle error
-		log.Printf("thread %d: Error registering with master server", wn)
+		log.Printf("thread %d worker %d : Error registering with master server", wn, wrkr.ID)
 		log.Printf(err.Error())
 		return
 	}
-	log.Printf("thread %d: Successfully registered with master server as ID %d", wn, wrkr.ID)
+	log.Printf("thread %d worker %d : Successfully registered with master server", wn, wrkr.ID)
 	time.Sleep(time.Second * 5)
 
 	// open listening port for jobs
@@ -46,46 +46,46 @@ func (wrkr *Worker) run(wn int, master Server) {
 		// update server showing this worker as ready to accept jobs
 		if err := wrkr.setReady(&master); err != nil {
 			//handle error
-			log.Printf("thread %d: Error setting READY with master server as ID %d", wn, wrkr.ID)
+			log.Printf("thread %d worker %d : Error setting READY with master server", wn, wrkr.ID)
 			log.Printf(err.Error())
 			return
 		}
-		log.Printf("thread %d: Successfully notified master server, READY to accept jobs as ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : Successfully notified master server, READY to accept jobs", wn, wrkr.ID)
 
 		// wait/listen to port for incoming jobs
 		time.Sleep(time.Second * 15)
 
 		// decode incoming job
-		log.Printf("thread %d: recieved job as ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : recieved job", wn, wrkr.ID)
 		time.Sleep(time.Second * 5)
 
 		// start job
-		log.Printf("thread %d: started job as ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : started job", wn, wrkr.ID)
 		time.Sleep(time.Second * 5)
 
 		// update server that we are working, and that job is running on this worker
 		if err := wrkr.setWorking(&master, job); err != nil {
 			//handle error
-			log.Printf("thread %d: Error setting WORKING with master server as ID %d", wn, wrkr.ID)
+			log.Printf("thread %d worker %d : Error setting WORKING with master server", wn, wrkr.ID)
 			log.Printf(err.Error())
 			return
 		}
-		log.Printf("thread %d: updated master for running job NUMBER WHAT? as ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : updated master for running job NUMBER WHAT?", wn, wrkr.ID)
 		if err := job.setRunning(&master, wrkr); err != nil {
 			//handle error
-			log.Printf("thread %d: Error setting job running with master server as ID %d", wn, wrkr.ID)
+			log.Printf("thread %d worker %d : Error setting job running with master server", wn, wrkr.ID)
 			log.Printf(err.Error())
 			return
 		}
-		log.Printf("thread %d: updated master for running job NUMBER WHAT? as ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : updated master for running job NUMBER WHAT?", wn, wrkr.ID)
 		time.Sleep(time.Second * 25)
 
 		// wait for job to finish
-		log.Printf("thread %d: completed job ?? as worker ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : completed job ?? as worker ID %d", wn, wrkr.ID)
 
 		// update server of job completion status
 
-		log.Printf("thread %d: updated master of successful job ?? completion as worker ID %d", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : updated master of successful job ?? completion as worker ID %d", wn, wrkr.ID)
 	}
 }
 
