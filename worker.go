@@ -32,8 +32,10 @@ func (wrkr *Worker) run(wn int, master Server) {
 		// handle error
 		log.Printf("thread %d: Error registering with master server", wn)
 		log.Printf(err.Error())
+		return
 	}
 	log.Printf("thread %d: Successfully registered with master server as ID %d", wn, wrkr.ID)
+	time.Sleep(time.Second * 5)
 
 	// open listening port for jobs
 	job := NewJob() // initialize an empty job to place incoming JSON job
@@ -46,6 +48,7 @@ func (wrkr *Worker) run(wn int, master Server) {
 			//handle error
 			log.Printf("thread %d: Error setting READY with master server as ID %d", wn, wrkr.ID)
 			log.Printf(err.Error())
+			return
 		}
 		log.Printf("thread %d: Successfully notified master server, READY to accept jobs as ID %d", wn, wrkr.ID)
 
@@ -65,12 +68,14 @@ func (wrkr *Worker) run(wn int, master Server) {
 			//handle error
 			log.Printf("thread %d: Error setting WORKING with master server as ID %d", wn, wrkr.ID)
 			log.Printf(err.Error())
+			return
 		}
 		log.Printf("thread %d: updated master for running job NUMBER WHAT? as ID %d", wn, wrkr.ID)
 		if err := job.setRunning(&master, wrkr); err != nil {
 			//handle error
 			log.Printf("thread %d: Error setting job running with master server as ID %d", wn, wrkr.ID)
 			log.Printf(err.Error())
+			return
 		}
 		log.Printf("thread %d: updated master for running job NUMBER WHAT? as ID %d", wn, wrkr.ID)
 		time.Sleep(time.Second * 25)
