@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var master server
-
 const jsonData = "application/json"
 
 func main() {
@@ -31,12 +29,12 @@ func main() {
 		strconv.FormatInt(int64(*startPort), 10))
 
 	// init the server struct to hold master server info
-	master = server{URLroot: "http://" + *ipPort, URLjobs: "http://" + *ipPort +
+	master := Server{URLroot: "http://" + *ipPort, URLjobs: "http://" + *ipPort +
 		*api + "jobs", URLworkers: "http://" + *ipPort + *api + "workers"}
 
 	for i := 0; i < *numWorkers; i++ {
-		worker := &worker{Port: strconv.Itoa(*numWorkers + i)}
-		go worker.run(i)
+		worker := &Worker{Port: strconv.Itoa(*numWorkers + i)}
+		go worker.run(i, master)
 		time.Sleep(time.Second * 1) // TODO remove this after testing
 	}
 

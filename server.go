@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type server struct {
+type Server struct {
 	URLroot     string    `json:"urlRoot"`
 	URLjobs     string    `json:"urlJobs"`
 	URLworkers  string    `json:"urlWorkers"`
@@ -13,7 +13,7 @@ type server struct {
 	LastUpdate  time.Time `json:"lastUpdate"`  // updateable
 }
 
-func (s *server) validate() error {
+func (s *Server) validate() error {
 	// request index (make http connection) to test server
 	// then update server struct
 	return nil
