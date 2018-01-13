@@ -1,29 +1,55 @@
 package main
 
-import "time"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"time"
 
-// Job contains state data for jobs
-type Job struct {
-	ID         int               `json:"id"`
-	WorkerID   int               `json:"workerID"` // updateable
-	Valid      bool              `json:"valid"`
-	Dispatched bool              `json:"dispatched"` // updateable
-	Running    bool              `json:"running"`    // updateable
-	Completed  bool              `json:"completed"`  // updateable
-	Created    time.Time         `json:"created"`
-	Started    time.Time         `json:"started"` // updateable
-	Ended      time.Time         `json:"ended"`   // updateable
-	Args       map[string]string `json:"args"`
-	Result     string            `json:"result"`     // updateable
-	LastUpdate time.Time         `json:"lastUpdate"` // updateable
-}
+	gostock "github.com/andocmdo/gostockd/common"
+)
 
-// Jobs is a slice of Job
-type Jobs []Job
+// Job is an alias for adding our own methods to the common gostock.Job struct
+type Job gostock.Job
 
 // NewJob is a constructor for Job structs (init Args map)
 func NewJob() *Job {
 	var j Job
 	j.Args = make(map[string]string)
 	return &j
+}
+
+func (job *Job) setRunning(master *Server, wrkr *Worker) error {
+	job.Running = true
+	job.WorkerID = wrkr.ID
+	jsonWorker, _ := json.Marshal(*job)
+	resp, err := http.Post(master.URLjobs+"/"+strconv.Itoa(job.ID), jsonData, bytes.NewBuffer(jsonWorker))
+	//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
+	if err != nil {
+		//log.Printf("worker %d: error setting READY with master server", wn)
+		//log.Println(err)
+		return err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		//log.Printf(err.Error())
+		return err
+	}
+	resp.Body.Close()
+	if err = json.Unmarshal(body, &wrkr); err != nil {
+		//log.Printf(err.Error())
+		return err
+	}
+	if wrkr.Valid != true {
+		//log.Printf("worker %d: master server returned worker object with false VALID flag when setting READY!", wn)
+		return errors.New("master server response was returned as invalid")
+	}
+	master.Valid = true
+	master.LastContact = time.Now()
+	master.LastUpdate = time.Now()
+
+	return nil
 }
