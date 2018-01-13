@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	gostock "github.com/andocmdo/gostockd/common"
+	zmq "github.com/pebbe/zmq4"
 )
 
 // Worker is an alias for adding our own methods to the common Worker struct
@@ -38,7 +40,10 @@ func (wrkr *Worker) run(wn int, master Server) {
 
 	// open listening port for jobs
 	job := NewJob() // initialize an empty job to place incoming JSON job
-	// TODO 0mq stuff here
+	//  Socket to talk to clients
+	responder, _ := zmq.NewSocket(zmq.REP)
+	defer responder.Close()
+	responder.Connect("tcp://localhost:" + wrkr.Port)
 
 	// loop here
 	for {
@@ -52,7 +57,16 @@ func (wrkr *Worker) run(wn int, master Server) {
 		log.Printf("thread %d worker %d : Successfully notified master server, READY to accept jobs", wn, wrkr.ID)
 
 		// wait/listen to port for incoming jobs
-		time.Sleep(time.Second * 15)
+		//  Wait for next request from client
+		request, _ := responder.Recv(0)
+		fmt.Printf("Received request: [%s]\n", request)
+
+		//  Do some 'work'
+		time.Sleep(time.Second)
+
+		//  Send reply back to client
+		responder.Send("World", 0)
+		time.Sleep(time.Second)
 
 		// decode incoming job
 		log.Printf("thread %d worker %d : recieved job", wn, wrkr.ID)
