@@ -33,7 +33,7 @@ func main() {
 		*api + "jobs", URLworkers: "http://" + *ipPort + *api + "workers"}
 
 	for i := 0; i < *numWorkers; i++ {
-		worker := &Worker{Port: strconv.Itoa(*numWorkers + i)}
+		worker := &Worker{Port: strconv.Itoa(*startPort + i)}
 		go worker.run(i, master)
 		time.Sleep(time.Second * 1) // TODO remove this after testing
 	}
