@@ -42,8 +42,8 @@ func (wrkr *Worker) run(wn int, master Server) {
 	job := NewJob() // initialize an empty job to place incoming JSON job
 	//  Socket to talk to clients
 	responder, _ := zmq.NewSocket(zmq.REP)
+	responder.Connect("tcp://" + wrkr.IPAddr + ":" + wrkr.Port)
 	defer responder.Close()
-	responder.Connect("tcp://localhost:" + wrkr.Port)
 
 	// loop here
 	for {
