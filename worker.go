@@ -2,17 +2,17 @@ package main
 
 import (
 	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
 
 	gostock "github.com/andocmdo/gostockd/common"
-	zmq "github.com/pebbe/zmq4"
 )
 
 // Worker is an alias for adding our own methods to the common Worker struct
@@ -41,9 +41,6 @@ func (wrkr *Worker) run(wn int, master Server) {
 	// open listening port for jobs
 	job := NewJob() // initialize an empty job to place incoming JSON job
 	//  Socket to talk to clients
-	responder, _ := zmq.NewSocket(zmq.REP)
-	responder.Connect("tcp://" + wrkr.IPAddr + ":" + wrkr.Port)
-	defer responder.Close()
 
 	// loop here
 	for {
@@ -58,14 +55,30 @@ func (wrkr *Worker) run(wn int, master Server) {
 
 		// wait/listen to port for incoming jobs
 		//  Wait for next request from client
-		request, _ := responder.Recv(0)
-		fmt.Printf("Received request: [%s]\n", request)
+		ln, err := net.Listen("tcp", ":"+wrkr.Port)
+		if err != nil {
+			// handle error
+			log.Printf("thread %d worker: %d : encountered an error opening listening TCP port "+wrkr.Port, wn, wrkr.ID)
+			log.Printf(err.Error())
+		}
+		conn, err := ln.Accept()
+		enc := gob.NewEncoder(conn) // Will write to network.
+		dec := gob.NewDecoder(conn) // Will read from network.
+
+		err = dec.Decode(&job)
+		if err != nil {
+			log.Printf("thread %d worker: %d : encountered an error opening listening TCP port "+wrkr.Port, wn, wrkr.ID)
+			log.Printf(err.Error())
+		}
+		log.Printf("thread %d worker %d : Recieved job # %d ", wn, wrkr.ID, job.ID)
+
+		err = enc.Encode(true)
 
 		//  Do some 'work'
 		time.Sleep(time.Second)
 
 		//  Send reply back to client
-		responder.Send("World", 0)
+
 		time.Sleep(time.Second)
 
 		// decode incoming job
