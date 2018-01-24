@@ -75,8 +75,9 @@ func (wrkr *Worker) run(wn int, master Server) {
 		log.Printf("thread %d worker %d : Recieved job # %d ", wn, wrkr.ID, job.ID)
 		log.Printf("%+v", job)
 
-		// return exactly what we recieved as confirmation
+		// return what we recieved as confirmation, except update dispatched variable
 		// TODO check if valid!
+		job.Dispatched = true
 		err = enc.Encode(&job)
 		conn.Close()
 
