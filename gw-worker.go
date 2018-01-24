@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -39,8 +38,16 @@ func (wrkr *Worker) run(wn int, master Server) {
 	time.Sleep(time.Second * 5)
 
 	// open listening port for jobs
-	job := NewJob() // initialize an empty job to place incoming JSON job
-	//  Socket to talk to clients
+	ln, err := net.Listen("tcp", ":"+wrkr.Port)
+	defer ln.Close()
+	if err != nil {
+		// handle error
+		log.Printf("thread %d worker: %d : encountered an error opening listening TCP port "+wrkr.Port, wn, wrkr.ID)
+		log.Printf(err.Error())
+	}
+
+	// initialize an empty job to place incoming JSON job
+	job := NewJob()
 
 	// loop here
 	for {
@@ -54,16 +61,11 @@ func (wrkr *Worker) run(wn int, master Server) {
 		log.Printf("thread %d worker %d : Successfully notified master server, READY to accept jobs", wn, wrkr.ID)
 
 		// wait/listen to port for incoming jobs
-		//  Wait for next request from client
-		ln, err := net.Listen("tcp", ":"+wrkr.Port)
-		if err != nil {
-			// handle error
-			log.Printf("thread %d worker: %d : encountered an error opening listening TCP port "+wrkr.Port, wn, wrkr.ID)
-			log.Printf(err.Error())
-		}
 		conn, err := ln.Accept()
-		enc := gob.NewEncoder(conn) // Will write to network.
-		dec := gob.NewDecoder(conn) // Will read from network.
+
+		// using json decoder now
+		enc := json.NewEncoder(conn) // Will write to network.
+		dec := json.NewDecoder(conn) // Will read from network.
 
 		err = dec.Decode(&job)
 		if err != nil {
@@ -71,47 +73,41 @@ func (wrkr *Worker) run(wn int, master Server) {
 			log.Printf(err.Error())
 		}
 		log.Printf("thread %d worker %d : Recieved job # %d ", wn, wrkr.ID, job.ID)
+		log.Printf("%+v", job)
 
-		err = enc.Encode(true)
-
-		//  Do some 'work'
-		time.Sleep(time.Second)
-
-		//  Send reply back to client
-
-		time.Sleep(time.Second)
-
-		// decode incoming job
-		log.Printf("thread %d worker %d : recieved job", wn, wrkr.ID)
-		time.Sleep(time.Second * 5)
-
-		// start job
-		log.Printf("thread %d worker %d : started job", wn, wrkr.ID)
-		time.Sleep(time.Second * 5)
+		// return exactly what we recieved as confirmation
+		// TODO check if valid!
+		err = enc.Encode(&job)
+		conn.Close()
 
 		// update server that we are working, and that job is running on this worker
 		if err := wrkr.setWorking(&master, job); err != nil {
 			//handle error
-			log.Printf("thread %d worker %d : Error setting WORKING with master server", wn, wrkr.ID)
+			log.Printf("thread %d worker %d : Error setting WORKING with master server for job ID %d", wn, wrkr.ID, job.ID)
 			log.Printf(err.Error())
 			return
 		}
-		log.Printf("thread %d worker %d : updated master for running job NUMBER WHAT?", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : updated master for running job %d", wn, wrkr.ID, job.ID)
+
+		//update server that job is running on this worker
 		if err := job.setRunning(&master, wrkr); err != nil {
 			//handle error
-			log.Printf("thread %d worker %d : Error setting job running with master server", wn, wrkr.ID)
+			log.Printf("thread %d worker %d : Error setting job %d running with master server", wn, wrkr.ID, job.ID)
 			log.Printf(err.Error())
 			return
 		}
-		log.Printf("thread %d worker %d : updated master for running job NUMBER WHAT?", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : updated master for running job %d", wn, wrkr.ID, job.ID)
+
+		//  Do some 'work'
 		time.Sleep(time.Second * 25)
 
-		// wait for job to finish
-		log.Printf("thread %d worker %d : completed job ??", wn, wrkr.ID)
+		// after job finishes
+		log.Printf("thread %d worker %d : completed job %d", wn, wrkr.ID, job.ID)
 
 		// update server of job completion status
 
-		log.Printf("thread %d worker %d : updated master of successful job ?? completion", wn, wrkr.ID)
+		log.Printf("thread %d worker %d : SHOULD updated master of successful job ?? completion", wn, wrkr.ID)
+		conn.Close()
 	}
 }
 
@@ -183,6 +179,7 @@ func (wrkr *Worker) setWorking(master *Server, job *Job) error {
 	wrkr.Ready = false
 	wrkr.Working = true
 	wrkr.JobID = job.ID
+
 	jsonWorker, _ := json.Marshal(wrkr)
 	resp, err := http.Post(master.URLworkers+"/"+strconv.Itoa(wrkr.ID), jsonData, bytes.NewBuffer(jsonWorker))
 	//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
@@ -211,3 +208,5 @@ func (wrkr *Worker) setWorking(master *Server, job *Job) error {
 
 	return nil
 }
+
+// TODO write completion server update method
