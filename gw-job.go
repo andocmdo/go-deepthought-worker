@@ -25,6 +25,7 @@ func NewJob() *Job {
 func (job *Job) setRunning(master *Server, wrkr *Worker) error {
 	job.Running = true
 	job.WorkerID = wrkr.ID
+	job.Started = time.Now()
 
 	jsonWorker, _ := json.Marshal(*job)
 	resp, err := http.Post(master.URLjobs+"/"+strconv.Itoa(job.ID), jsonData, bytes.NewBuffer(jsonWorker))
