@@ -45,11 +45,11 @@ func (job *Job) setRunning(master *Server, wrkr *Worker) error {
 		return err
 	}
 	resp.Body.Close()
-	if err = json.Unmarshal(body, &wrkr); err != nil {
+	if err = json.Unmarshal(body, job); err != nil {
 		//log.Printf(err.Error())
 		return err
 	}
-	if wrkr.Valid != true {
+	if job.Valid != true {
 		//log.Printf("worker %d: master server returned worker object with false VALID flag when setting READY!", wn)
 		return errors.New("master server response was returned as invalid")
 	}
@@ -57,9 +57,9 @@ func (job *Job) setRunning(master *Server, wrkr *Worker) error {
 	master.LastContact = time.Now()
 	master.LastUpdate = time.Now()
 
-	log.Printf("exiting setRunning")
 	log.Printf("%+v", wrkr)
 	log.Printf("%+v", job)
+	log.Printf("exiting setRunning")
 
 	return nil
 }

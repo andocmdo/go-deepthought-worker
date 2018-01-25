@@ -25,7 +25,7 @@ func NewWorker() *Worker {
 }
 
 func (wrkr *Worker) run(wn int, master Server) {
-	log.Printf("thread %d worker %d : started", wn, wrkr.ID)
+	log.Printf("thread %d started", wn)
 
 	// register worker with gostockd api server
 	if err := wrkr.register(&master); err != nil {
@@ -80,6 +80,8 @@ func (wrkr *Worker) run(wn int, master Server) {
 		job.Dispatched = true
 		err = enc.Encode(&job)
 		conn.Close()
+
+		time.Sleep(time.Second * 5)
 
 		// update server that we are working, and that job is running on this worker
 		if err := wrkr.setWorking(&master, job); err != nil {
