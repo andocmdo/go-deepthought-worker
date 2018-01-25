@@ -97,7 +97,7 @@ func (wrkr *Worker) run(wn int, master Server) {
 			log.Printf(err.Error())
 			return
 		}
-		log.Printf("thread %d worker %d : updated master for running job %d", wn, wrkr.ID, job.ID)
+		log.Printf("thread %d worker %d : updated master (setrunning) for running job %d", wn, wrkr.ID, job.ID)
 
 		//  Do some 'work'
 		time.Sleep(time.Second * 25)
