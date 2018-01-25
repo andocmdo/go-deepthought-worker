@@ -104,12 +104,18 @@ func (wrkr *Worker) run(wn int, master Server) {
 		//  Do some 'work'
 		time.Sleep(time.Second * 25)
 
-		// after job finishes
+		// after job finishes, update job
 		log.Printf("thread %d worker %d : completed job %d", wn, wrkr.ID, job.ID)
+		if err := job.setComplete(&master, wrkr); err != nil {
+			//handle error
+			log.Printf("thread %d worker %d : Error setting job %d complete with master server", wn, wrkr.ID, job.ID)
+			log.Printf(err.Error())
+			return
+		}
+		log.Printf("thread %d worker %d : updated master (setComplete) for completed job %d", wn, wrkr.ID, job.ID)
 
-		// update server of job completion status
+		// update worker status
 
-		log.Printf("thread %d worker %d : SHOULD updated master of successful job ?? completion", wn, wrkr.ID)
 		conn.Close()
 	}
 }
@@ -214,3 +220,37 @@ func (wrkr *Worker) setWorking(master *Server, job *Job) error {
 }
 
 // TODO write completion server update method
+func (wrkr *Worker) setComplete(master *Server, job *Job) error {
+	// set this worker as ready to accept jobs
+	wrkr.Ready = true
+	wrkr.Working = false
+	wrkr.JobID = job.ID
+
+	jsonWorker, _ := json.Marshal(wrkr)
+	resp, err := http.Post(master.URLworkers+"/"+strconv.Itoa(wrkr.ID), jsonData, bytes.NewBuffer(jsonWorker))
+	//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
+	if err != nil {
+		//log.Printf("worker %d: error setting READY with master server", wn)
+		//log.Println(err)
+		return err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		//log.Printf(err.Error())
+		return err
+	}
+	resp.Body.Close()
+	if err = json.Unmarshal(body, &wrkr); err != nil {
+		//log.Printf(err.Error())
+		return err
+	}
+	if wrkr.Valid != true {
+		//log.Printf("worker %d: master server returned worker object with false VALID flag when setting READY!", wn)
+		return errors.New("master server response was returned as invalid")
+	}
+	master.Valid = true
+	master.LastContact = time.Now()
+	master.LastUpdate = time.Now()
+
+	return nil
+}
