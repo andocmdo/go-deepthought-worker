@@ -184,10 +184,6 @@ func (wrkr *Worker) setWorking(master *Server, job *Job) error {
 	wrkr.Working = true
 	wrkr.JobID = job.ID
 
-	log.Printf("called setWorking")
-	log.Printf("%+v", wrkr)
-	log.Printf("%+v", job)
-
 	jsonWorker, _ := json.Marshal(wrkr)
 	resp, err := http.Post(master.URLworkers+"/"+strconv.Itoa(wrkr.ID), jsonData, bytes.NewBuffer(jsonWorker))
 	//resp, err := http.PostForm(requestURL, url.Values{"port": {sPort}})
@@ -213,10 +209,6 @@ func (wrkr *Worker) setWorking(master *Server, job *Job) error {
 	master.Valid = true
 	master.LastContact = time.Now()
 	master.LastUpdate = time.Now()
-
-	log.Printf("exiting setWorking")
-	log.Printf("%+v", wrkr)
-	log.Printf("%+v", job)
 
 	return nil
 }
