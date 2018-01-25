@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,10 +25,6 @@ func NewJob() *Job {
 func (job *Job) setRunning(master *Server, wrkr *Worker) error {
 	job.Running = true
 	job.WorkerID = wrkr.ID
-
-	log.Printf("called setRunning")
-	log.Printf("%+v", wrkr)
-	log.Printf("%+v", job)
 
 	jsonWorker, _ := json.Marshal(*job)
 	resp, err := http.Post(master.URLjobs+"/"+strconv.Itoa(job.ID), jsonData, bytes.NewBuffer(jsonWorker))
@@ -56,10 +51,6 @@ func (job *Job) setRunning(master *Server, wrkr *Worker) error {
 	master.Valid = true
 	master.LastContact = time.Now()
 	master.LastUpdate = time.Now()
-
-	log.Printf("%+v", wrkr)
-	log.Printf("%+v", job)
-	log.Printf("exiting setRunning")
 
 	return nil
 }
