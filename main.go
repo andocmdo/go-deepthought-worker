@@ -32,6 +32,9 @@ func main() {
 	master := Server{URLroot: "http://" + *ipPort, URLjobs: "http://" + *ipPort +
 		*api + "jobs", URLworkers: "http://" + *ipPort + *api + "workers"}
 
+	// TODO check that server is running, if not, wait....
+	// also when the threads have started, we will wait as well if we lose connection
+
 	for i := 0; i < *numWorkers; i++ {
 		worker := &Worker{Port: strconv.Itoa(*startPort + i)}
 		go worker.run(i, master)

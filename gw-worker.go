@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -102,7 +103,15 @@ func (wrkr *Worker) run(wn int, master Server) {
 		log.Printf("thread %d worker %d : updated master (setrunning) for running job %d", wn, wrkr.ID, job.ID)
 
 		//  Do some 'work'
-		time.Sleep(time.Second * 25)
+		// in this test we are going to sleep and also run 'echo' command
+		time.Sleep(time.Second * 5)
+		cmd := exec.Command(job.Args["command"], "test")
+		out, err := cmd.Output()
+		if err != nil {
+			log.Printf("error: %s", err)
+		}
+		job.Result = string(out)
+		log.Printf("thread %d worker %d : completed job %d, result was: %s", wn, wrkr.ID, job.ID, job.Result)
 
 		// after job finishes, update job
 		log.Printf("thread %d worker %d : completed job %d", wn, wrkr.ID, job.ID)

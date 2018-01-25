@@ -60,7 +60,7 @@ func (job *Job) setComplete(master *Server, wrkr *Worker) error {
 	job.Running = false
 	job.Completed = true // TODO if job did complete correctly, then set error
 	job.Ended = time.Now()
-	job.Result = "IT WORKS??????" // TODO change this to the programs output
+	//job.Result = "IT WORKS??????" // TODO change this to the programs output
 	//job.WorkerID = wrkr.ID
 
 	jsonWorker, _ := json.Marshal(*job)
