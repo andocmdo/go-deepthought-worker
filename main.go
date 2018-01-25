@@ -39,5 +39,5 @@ func main() {
 	}
 
 	for {
-	} // run forever
+	} // run forever TODO look for an error condition, maybe use a mutex to set error
 }
