@@ -35,7 +35,7 @@ func (wrkr *Worker) run(wn int, master Server) {
 		return
 	}
 	log.Printf("thread %d worker %d : Successfully registered with master server", wn, wrkr.ID)
-	time.Sleep(time.Second * 5)
+	//time.Sleep(time.Second * 5)
 
 	// open listening port for jobs
 	ln, err := net.Listen("tcp", ":"+wrkr.Port)
@@ -81,7 +81,7 @@ func (wrkr *Worker) run(wn int, master Server) {
 		err = enc.Encode(&job)
 		conn.Close()
 
-		time.Sleep(time.Second * 5)
+		//time.Sleep(time.Second * 5)
 
 		// update server that we are working, and that job is running on this worker
 		if err := wrkr.setWorking(&master, job); err != nil {
