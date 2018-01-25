@@ -25,7 +25,7 @@ func main() {
 		strconv.FormatInt(int64(coresAvailable), 10))
 	log.Println("Number of workers: " +
 		strconv.FormatInt(int64(*numWorkers), 10))
-	log.Println("Starting port (for zeromq): " +
+	log.Println("Starting port (for listening TCP port to accept jobs): " +
 		strconv.FormatInt(int64(*startPort), 10))
 
 	// init the server struct to hold master server info
