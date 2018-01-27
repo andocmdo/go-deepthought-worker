@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"runtime"
 	"strconv"
 	"time"
@@ -32,8 +33,19 @@ func main() {
 	master := Server{URLroot: "http://" + *ipPort, URLjobs: "http://" + *ipPort +
 		*api + "jobs", URLworkers: "http://" + *ipPort + *api + "workers"}
 
-	// TODO check that server is running, if not, wait....
-	// also when the threads have started, we will wait as well if we lose connection
+	// TODO check that main server is running, if not, wait....
+	// TODO also when the threads have started, we will wait as well if we lose connection
+	for {
+		resp, err := http.Get(master.URLroot)
+		defer resp.Body.Close()
+		if err == nil {
+			break
+		}
+		log.Print("Error connecting to master server. Is it running? Error: ", err.Error())
+		log.Print("Retry connection to master in 30 secs")
+		time.Sleep(time.Second * 30)
+
+	}
 
 	for i := 0; i < *numWorkers; i++ {
 		worker := &Worker{Port: strconv.Itoa(*startPort + i)}
