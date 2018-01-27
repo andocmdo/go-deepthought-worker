@@ -14,7 +14,7 @@ const jsonData = "application/json"
 func main() {
 	// get command args
 	numWorkers := flag.Int("workers", 1, "max number of workers to spawn")
-	startPort := flag.Int("port", 80085, "starting port to accept jobs")
+	startPort := flag.Int("port", 12345, "starting port to accept jobs")
 	ipPort := flag.String("master", "127.0.0.1:8080",
 		"IP address and port of the API server (master node)")
 	api := flag.String("api", "/api/v1/", "api root")

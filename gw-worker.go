@@ -38,20 +38,18 @@ func (wrkr *Worker) run(wn int, master Server) {
 	log.Printf("thread %d worker %d : Successfully registered with master server", wn, wrkr.ID)
 	//time.Sleep(time.Second * 5)
 
-	// open listening port for jobs
-	ln, err := net.Listen("tcp", ":"+wrkr.Port)
-	defer ln.Close()
-	if err != nil {
-		// handle error
-		log.Printf("thread %d worker: %d : encountered an error opening listening TCP port "+wrkr.Port, wn, wrkr.ID)
-		log.Printf(err.Error())
-	}
-
 	// initialize an empty job to place incoming JSON job
 	job := NewJob()
 
 	// loop here
 	for {
+		// open listening port for jobs
+		ln, err := net.Listen("tcp", ":"+wrkr.Port)
+		if err != nil {
+			// handle error
+			log.Printf("thread %d worker: %d : encountered an error opening listening TCP port "+wrkr.Port, wn, wrkr.ID)
+			log.Printf(err.Error())
+		}
 		// update server showing this worker as ready to accept jobs
 		if err := wrkr.setReady(&master); err != nil {
 			//handle error
@@ -113,12 +111,12 @@ func (wrkr *Worker) run(wn int, master Server) {
 		out, err := cmd.Output()
 		log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
 		if err != nil {
-			log.Printf("thread %d worker %d : ran command with no error for job %d", wn, wrkr.ID, job.ID)
+			log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
 			job.Success = false
 			log.Printf("error: %s", err)
 
 		} else {
-			log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
+			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
 			job.Result = string(out)
 			job.Success = true
 		}
@@ -137,7 +135,14 @@ func (wrkr *Worker) run(wn int, master Server) {
 
 		// update worker status
 
-		conn.Close()
+		conerr := conn.Close()
+		if conerr != nil {
+			log.Printf("thread %d worker %d : error closing conn for job %d", wn, wrkr.ID, job.ID)
+		}
+		lnerr := ln.Close()
+		if lnerr != nil {
+			log.Printf("thread %d worker %d : error closing ln for job %d", wn, wrkr.ID, job.ID)
+		}
 	}
 }
 
