@@ -33,8 +33,7 @@ func main() {
 	master := Server{URLroot: "http://" + *ipPort, URLjobs: "http://" + *ipPort +
 		*api + "jobs", URLworkers: "http://" + *ipPort + *api + "workers"}
 
-	// TODO check that main server is running, if not, wait....
-	// TODO also when the threads have started, we will wait as well if we lose connection
+	// TODO also when the threads have started, we will wait as well if we lose connection?
 	for {
 		resp, err := http.Get(master.URLroot)
 		//defer resp.Body.Close()

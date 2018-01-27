@@ -58,10 +58,8 @@ func (job *Job) setRunning(master *Server, wrkr *Worker) error {
 
 func (job *Job) setComplete(master *Server, wrkr *Worker) error {
 	job.Running = false
-	job.Completed = true // TODO if job did complete correctly, then set error
+	job.Completed = true // TODO if job did not complete correctly, then set error
 	job.Ended = time.Now()
-	//job.Result = "IT WORKS??????" // TODO change this to the programs output
-	//job.WorkerID = wrkr.ID
 
 	jsonWorker, _ := json.Marshal(*job)
 	resp, err := http.Post(master.URLjobs+"/"+strconv.Itoa(job.ID), jsonData, bytes.NewBuffer(jsonWorker))
