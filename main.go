@@ -41,7 +41,7 @@ func main() {
 			resp.Body.Close()
 			break
 		}
-		log.Print("Error connecting to master server. Is it running? Error: ", err.Error())
+		log.Print("Error connecting to master server. Is it running?)
 		log.Print("Error: ", err.Error())
 		log.Print("Retry connection to master in 30 secs")
 		time.Sleep(time.Second * 30)
