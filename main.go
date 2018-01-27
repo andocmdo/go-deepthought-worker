@@ -37,11 +37,13 @@ func main() {
 	// TODO also when the threads have started, we will wait as well if we lose connection
 	for {
 		resp, err := http.Get(master.URLroot)
-		defer resp.Body.Close()
+		//defer resp.Body.Close()
 		if err == nil {
+			resp.Body.Close()
 			break
 		}
 		log.Print("Error connecting to master server. Is it running? Error: ", err.Error())
+		log.Print("Error: ", err.Error())
 		log.Print("Retry connection to master in 30 secs")
 		time.Sleep(time.Second * 30)
 
