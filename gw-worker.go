@@ -85,33 +85,40 @@ func (wrkr *Worker) run(wn int, master Server) {
 		//time.Sleep(time.Second * 5)
 
 		// update server that we are working, and that job is running on this worker
-		if err := wrkr.setWorking(&master, job); err != nil {
+		if errr := wrkr.setWorking(&master, job); err != nil {
 			//handle error
 			log.Printf("thread %d worker %d : Error setting WORKING with master server for job ID %d", wn, wrkr.ID, job.ID)
-			log.Printf(err.Error())
+			log.Printf(errr.Error())
 			return
 		}
 		log.Printf("thread %d worker %d : updated master for running job %d", wn, wrkr.ID, job.ID)
 
 		//update server that job is running on this worker
-		if err := job.setRunning(&master, wrkr); err != nil {
+		if errrr := job.setRunning(&master, wrkr); err != nil {
 			//handle error
 			log.Printf("thread %d worker %d : Error setting job %d running with master server", wn, wrkr.ID, job.ID)
-			log.Printf(err.Error())
+			log.Printf(errrr.Error())
 			return
 		}
 		log.Printf("thread %d worker %d : updated master (setrunning) for running job %d", wn, wrkr.ID, job.ID)
 
 		//  Do some 'work'
 		// in this test we are going to sleep and also run 'echo' command
+		log.Printf("thread %d worker %d : sleeping for 5s before running job %d", wn, wrkr.ID, job.ID)
 		time.Sleep(time.Second * 5)
-		cmd := exec.Command(job.Args["command"], "test")
+		log.Printf("thread %d worker %d : starting command for job %d", wn, wrkr.ID, job.ID)
+		cmdString := job.Args["command"] + " test"
+		cmd := exec.Command("bash", "-c", cmdString)
+		log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
 		out, err := cmd.Output()
+		log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
 		if err != nil {
+			log.Printf("thread %d worker %d : ran command with no error for job %d", wn, wrkr.ID, job.ID)
 			job.Success = false
 			log.Printf("error: %s", err)
 
 		} else {
+			log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
 			job.Result = string(out)
 			job.Success = true
 		}
