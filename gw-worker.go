@@ -110,9 +110,12 @@ func (wrkr *Worker) run(wn int, master Server) {
 		if err != nil {
 			job.Success = false
 			log.Printf("error: %s", err)
+
+		} else {
+			job.Result = string(out)
+			job.Success = true
 		}
-		job.Result = string(out)
-		job.Success = true
+
 		log.Printf("thread %d worker %d : completed job %d, result was: %s", wn, wrkr.ID, job.ID, job.Result)
 
 		// after job finishes, update job
