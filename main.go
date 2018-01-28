@@ -51,7 +51,7 @@ func main() {
 	for i := 0; i < *numWorkers; i++ {
 		worker := &Worker{Port: strconv.Itoa(*startPort + i)}
 		go worker.run(i, master)
-		time.Sleep(time.Second * 1) // TODO remove this after testing
+		time.Sleep(time.Millisecond * 100) // TODO remove this after testing
 	}
 
 	for {

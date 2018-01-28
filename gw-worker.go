@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -77,24 +78,31 @@ func (wrkr *Worker) run(wn int, master Server) {
 		// TODO check if valid!
 		job.Dispatched = true
 		err = enc.Encode(&job)
-		conn.Close()
+		conerr := conn.Close()
+		if conerr != nil {
+			log.Printf("thread %d worker %d : error closing conn for job %d", wn, wrkr.ID, job.ID)
+		}
+		lnerr := ln.Close()
+		if lnerr != nil {
+			log.Printf("thread %d worker %d : error closing ln for job %d", wn, wrkr.ID, job.ID)
+		}
 
 		//time.Sleep(time.Second * 5)
 
 		// update server that we are working, and that job is running on this worker
-		if errr := wrkr.setWorking(&master, job); err != nil {
+		if wrkerr := wrkr.setWorking(&master, job); err != nil {
 			//handle error
 			log.Printf("thread %d worker %d : Error setting WORKING with master server for job ID %d", wn, wrkr.ID, job.ID)
-			log.Printf(errr.Error())
+			log.Printf(wrkerr.Error())
 			return
 		}
 		log.Printf("thread %d worker %d : updated master for running job %d", wn, wrkr.ID, job.ID)
 
 		//update server that job is running on this worker
-		if errrr := job.setRunning(&master, wrkr); err != nil {
+		if runerr := job.setRunning(&master, wrkr); err != nil {
 			//handle error
 			log.Printf("thread %d worker %d : Error setting job %d running with master server", wn, wrkr.ID, job.ID)
-			log.Printf(errrr.Error())
+			log.Printf(runerr.Error())
 			return
 		}
 		log.Printf("thread %d worker %d : updated master (setrunning) for running job %d", wn, wrkr.ID, job.ID)
@@ -104,46 +112,36 @@ func (wrkr *Worker) run(wn int, master Server) {
 		log.Printf("thread %d worker %d : sleeping for 5s before running job %d", wn, wrkr.ID, job.ID)
 		time.Sleep(time.Second * 5)
 		log.Printf("thread %d worker %d : starting command for job %d", wn, wrkr.ID, job.ID)
-		/*
-			cmdString := job.Args["command"] + " test"
-			cmd := exec.Command("bash", "-c", cmdString)
-			log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
-			out, err := cmd.Output()
-			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
-			if err != nil {
-				log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
-				job.Success = false
-				log.Printf("error: %s", err)
 
-			} else {
-				log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
-				job.Result = string(out)
-				job.Success = true
-			}
-		*/
+		cmdString := job.Args["command"] + " test"
+		cmd := exec.Command("bash", "-c", cmdString)
+		log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
+		out, cmderr := cmd.Output()
+		log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
+		if cmderr != nil {
+			log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
+			job.Success = false
+			log.Printf("error: %s", err)
+
+		} else {
+			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
+			job.Result = string(out)
+			job.Success = true
+		}
+
 		job.Success = true
 		log.Printf("thread %d worker %d : completed job %d, result was: %s", wn, wrkr.ID, job.ID, job.Result)
 
 		// after job finishes, update job
 		log.Printf("thread %d worker %d : completed job %d", wn, wrkr.ID, job.ID)
-		if err := job.setComplete(&master, wrkr); err != nil {
+		if completeErr := job.setComplete(&master, wrkr); err != nil {
 			//handle error
 			log.Printf("thread %d worker %d : Error setting job %d complete with master server", wn, wrkr.ID, job.ID)
-			log.Printf(err.Error())
+			log.Printf(completeErr.Error())
 			return
 		}
 		log.Printf("thread %d worker %d : updated master (setComplete) for completed job %d", wn, wrkr.ID, job.ID)
 
-		// update worker status
-
-		conerr := conn.Close()
-		if conerr != nil {
-			log.Printf("thread %d worker %d : error closing conn for job %d", wn, wrkr.ID, job.ID)
-		}
-		lnerr := ln.Close()
-		if lnerr != nil {
-			log.Printf("thread %d worker %d : error closing ln for job %d", wn, wrkr.ID, job.ID)
-		}
 	}
 }
 
