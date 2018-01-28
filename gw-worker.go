@@ -8,7 +8,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os/exec"
 	"strconv"
 	"time"
 
@@ -105,22 +104,24 @@ func (wrkr *Worker) run(wn int, master Server) {
 		log.Printf("thread %d worker %d : sleeping for 5s before running job %d", wn, wrkr.ID, job.ID)
 		time.Sleep(time.Second * 5)
 		log.Printf("thread %d worker %d : starting command for job %d", wn, wrkr.ID, job.ID)
-		cmdString := job.Args["command"] + " test"
-		cmd := exec.Command("bash", "-c", cmdString)
-		log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
-		out, err := cmd.Output()
-		log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
-		if err != nil {
-			log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
-			job.Success = false
-			log.Printf("error: %s", err)
-
-		} else {
+		/*
+			cmdString := job.Args["command"] + " test"
+			cmd := exec.Command("bash", "-c", cmdString)
+			log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
+			out, err := cmd.Output()
 			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
-			job.Result = string(out)
-			job.Success = true
-		}
+			if err != nil {
+				log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
+				job.Success = false
+				log.Printf("error: %s", err)
 
+			} else {
+				log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
+				job.Result = string(out)
+				job.Success = true
+			}
+		*/
+		job.Success = true
 		log.Printf("thread %d worker %d : completed job %d, result was: %s", wn, wrkr.ID, job.ID, job.Result)
 
 		// after job finishes, update job
