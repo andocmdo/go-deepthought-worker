@@ -109,27 +109,39 @@ func (wrkr *Worker) run(wn int, master Server) {
 
 		//  Do some 'work'
 		// in this test we are going to sleep and also run 'echo' command
-		log.Printf("thread %d worker %d : sleeping for 5s before running job %d", wn, wrkr.ID, job.ID)
-		time.Sleep(time.Second * 5)
+		log.Printf("thread %d worker %d : sleeping for 3s before running job %d", wn, wrkr.ID, job.ID)
+		time.Sleep(time.Second * 3)
 		log.Printf("thread %d worker %d : starting command for job %d", wn, wrkr.ID, job.ID)
 
+		/*
+			cmdString := job.Args["command"] + " test"
+			cmd := exec.Command("bash", "-c", cmdString)
+			log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
+			out, cmderr := cmd.Output()
+			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
+		*/
 		cmdString := job.Args["command"] + " test"
 		cmd := exec.Command("bash", "-c", cmdString)
-		log.Printf("thread %d worker %d : built command for job %d", wn, wrkr.ID, job.ID)
-		out, cmderr := cmd.Output()
-		log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		cmderr := cmd.Run()
+		outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+		log.Printf("out: %s \t err: %s\n", outStr, errStr)
 		if cmderr != nil {
 			log.Printf("thread %d worker %d : ran command but had error for job %d", wn, wrkr.ID, job.ID)
+			job.Result = string(errStr)
 			job.Success = false
 			log.Printf("error: %s", err)
 
 		} else {
-			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
-			job.Result = string(out)
+
+			log.Printf("thread %d worker %d : command successful for job %d", wn, wrkr.ID, job.ID)
+
+			job.Result = string(outStr)
 			job.Success = true
 		}
 
-		job.Success = true
 		log.Printf("thread %d worker %d : completed job %d, result was: %s", wn, wrkr.ID, job.ID, job.Result)
 
 		// after job finishes, update job
