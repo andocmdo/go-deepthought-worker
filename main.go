@@ -54,6 +54,5 @@ func main() {
 		time.Sleep(time.Millisecond * 100) // TODO remove this after testing
 	}
 
-	for {
-	} // run forever TODO look for an error condition, maybe use a mutex to set error
+	select {} // run forever TODO look for an error condition, maybe use a mutex to set error
 }
