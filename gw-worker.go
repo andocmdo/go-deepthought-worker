@@ -109,8 +109,8 @@ func (wrkr *Worker) run(wn int, master Server) {
 
 		//  Do some 'work'
 		// in this test we are going to sleep and also run 'echo' command
-		log.Printf("thread %d worker %d : sleeping for 3s before running job %d", wn, wrkr.ID, job.ID)
-		time.Sleep(time.Second * 3)
+		//log.Printf("thread %d worker %d : sleeping for 3s before running job %d", wn, wrkr.ID, job.ID)
+		//time.Sleep(time.Second * 3)
 		log.Printf("thread %d worker %d : starting command for job %d", wn, wrkr.ID, job.ID)
 
 		/*
