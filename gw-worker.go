@@ -120,7 +120,7 @@ func (wrkr *Worker) run(wn int, master Server) {
 			out, cmderr := cmd.Output()
 			log.Printf("thread %d worker %d : ran command for job %d", wn, wrkr.ID, job.ID)
 		*/
-		cmdString := job.Args["command"] + " test"
+		cmdString := job.Args["command"]
 		cmd := exec.Command("bash", "-c", cmdString)
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout
