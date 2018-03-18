@@ -1,2 +1,2 @@
-# gostock-worker
-Worker node for gostockd
+# go-deepthought-worker
+Worker node for go-deepthought
